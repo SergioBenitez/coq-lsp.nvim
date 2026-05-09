@@ -62,6 +62,16 @@ function CoqLSPNvim:panel_key(bufnr)
   return self.config.info_panel_mode == 'buffer' and bufnr or vim.api.nvim_get_current_tabpage()
 end
 
+---@param bufnr buffer
+function CoqLSPNvim:open_panel(bufnr)
+  local pk = self:panel_key(bufnr)
+  if self.config.info_panel_sticky_close then
+    panel.ensure_open(pk, bufnr)
+  else
+    panel.open(pk, bufnr)
+  end
+end
+
 ---@param bufnr? buffer
 function CoqLSPNvim:open_info_panel(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -189,11 +199,8 @@ end
 function CoqLSPNvim:register(bufnr)
   assert(self.buffers[bufnr] == nil)
   self.buffers[bufnr] = {}
-  local pk = self:panel_key(bufnr)
-  if self.config.info_panel_sticky_close then
-    panel.ensure_open(pk, bufnr)
-  else
-    panel.open(pk, bufnr)
+  if self.config.info_panel_mode == 'buffer' or vim.api.nvim_get_current_buf() == bufnr then
+    self:open_panel(bufnr)
   end
 
   vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
@@ -207,9 +214,9 @@ function CoqLSPNvim:register(bufnr)
   vim.api.nvim_create_autocmd('BufEnter', {
     group = self.ag,
     buffer = bufnr,
-    desc = 'Retarget info panel to focused coq buffer',
+    desc = 'Open or retarget info panel for focused coq buffer',
     callback = function(ev)
-      panel.retarget(self:panel_key(ev.buf), ev.buf)
+      self:open_panel(ev.buf)
     end,
   })
   vim.api.nvim_create_autocmd('LspDetach', {

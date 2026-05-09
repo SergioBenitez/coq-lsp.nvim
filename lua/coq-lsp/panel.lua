@@ -81,18 +81,6 @@ function M.ensure_open(key, bufnr)
   end
 end
 
----Retarget `key`'s panel (if any) to `bufnr`'s info buffer.
----No-op if the key has no valid panel (respects manual close).
----@param key coqlsp.PanelKey
----@param bufnr buffer coq buffer
-function M.retarget(key, bufnr)
-  local win = panels[key]
-  if not (win and vim.api.nvim_win_is_valid(win)) then
-    return
-  end
-  vim.api.nvim_win_set_buf(win, M.get_info_bufnr(bufnr))
-end
-
 local ag = vim.api.nvim_create_augroup('coq-lsp-panel', { clear = true })
 
 vim.api.nvim_create_autocmd('WinClosed', {
